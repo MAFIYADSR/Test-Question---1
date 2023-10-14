@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta BlogTitle="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Store moultiple user</title>
+</head>
+
+<body>
+    <form onsubmit="userDetails(event)">
+        <h1>Blog content</h1>
+        <label for="BlogTitle">BlogTitle</label><br>
+        <input type="text" id="BlogTitle"><br><br>
+        <label for="BlogAuthor">BlogAuthor</label><br>
+        <input type="text" id="BlogAuthor"><br><br>
+        <label for="BlogCotent">BlogCotent</label><br>
+        <textarea class="form-control" id="BlogCotent" rows="3"></textarea><br><br>
+
+        <input type="submit">
+    </form>
+    <ul id="listofitems"></ul>
+
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
+    <script>
+        function userDetails(event){
+            event.preventDefault();
+            const BlogTitle = event.target.BlogTitle.value;
+            const BlogAuthor = event.target.BlogAuthor.value;
+            const BlogCotent = event.target.BlogCotent.value;
+
+            const obj = {
+                BlogTitle,
+                BlogAuthor,
+                BlogCotent
+            };
+            axios.post("http://localhost:3000/user/add-user", obj)
+                .then((response) => {
+                    console.log(response);
+                    showUser(response.data.newUserDetail);
+
+                })
+                .catch((err) => {
+                    document.body.innerHTML = document.body.innerHTML + "<h4> Something went wrong </h4>"
+                    console.log(err);
+                })
+        }
+        window.addEventListener("DOMContentLoaded", () => {
+            axios.get("http://localhost:3000/user/get-users")
+                .then((response) => {
+                    console.log(response);
+
+                    for(var i = 0; i<response.data.allUsers.length; i++){
+                        showUser(response.data.allUsers[i]);
+                    }
+                })
+                .catch((error) => {
+                    console.log(error);
+                })
+        })
+
+        function showUser(user){
+            document.getElementById('BlogCotent').value = '';
+            document.getElementById('BlogTitle').value = '';
+            document.getElementById('BlogAuthor').value = '';
+            // console.log('i am in showuser')
+
+            if (localStorage.getItem(user.BlogCotent) != null) {
+                removeUserFromScreen(user.BlogCotent);
+            }
+
+            const parentNode = document.getElementById('listofitems');
+            const childHTML = `<li id = ${user.id}> ${user.BlogTitle} - ${user.BlogAuthor} -> ${user.BlogCotent}
+                        <button onclick=deleteUser('${user.id}')> Delete </button>
+                    </li>`
+                    //<button onclick=editUser('${user.BlogCotent}', '${user.BlogTitle}', '${user.BlogAuthor}', '${user.id}')> Edit </button>
+                    
+                    // console.log(user.id, user.BlogCotent, user.BlogTitle);
+            parentNode.innerHTML = parentNode.innerHTML + childHTML;
+        }
+
+        // function editUser(BlogCotentId, BlogTitle, BlogAuthor, userId){
+        //     axios.edit(`http://localhost:3000/user/edit-user/${userId}`)
+        //     .then((response)=> {
+        //         deleteUser(userId);
+        //     })
+        // }
+
+        function deleteUser(userId)
+        {
+            // userId = undefined;
+            axios.delete(`http://localhost:3000/user/delete-user/${userId}`)
+                .then((response) => {
+                // console.log("i am in delete user axios");
+
+                    removeUserFromScreen(userId);
+                })
+                .catch((err) => {
+                    console.log(err);
+                })
+        }
+
+        function removeUserFromScreen(userId){
+            const parentNode = document.getElementById('listofitems');
+            const childNodeToBeDeleted = document.getElementById(userId);
+            if(childNodeToBeDeleted){
+                parentNode.removeChild(childNodeToBeDeleted);
+            }
+        }
+        
+
+    </script>
+
+
+
+</body>
+
+
+
+
+
+</html>
